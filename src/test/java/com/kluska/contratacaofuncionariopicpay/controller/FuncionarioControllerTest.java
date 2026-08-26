@@ -158,6 +158,63 @@ class FuncionarioControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void deveBuscarFuncionariosPorNomeCargoEStatus() throws Exception {
+        cadastrar(9L);
+
+        mockMvc.perform(get("/funcionarios/busca")
+                        .param("nome", "ANA")
+                        .param("cargo", "desenvol")
+                        .param("status", "EM_ANALISE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(9));
+    }
+
+    @Test
+    void deveRecusarBuscaSemCriterios() throws Exception {
+        mockMvc.perform(get("/funcionarios/busca"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value(
+                        "Informe ao menos um critério de busca: nome, cargo ou status."
+                ));
+    }
+
+    @Test
+    void deveRecusarStatusDeBuscaInvalido() throws Exception {
+        mockMvc.perform(get("/funcionarios/busca")
+                        .param("status", "DESCONHECIDO"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value(
+                        "O valor 'DESCONHECIDO' é inválido para o parâmetro 'status'."
+                ));
+    }
+
+    @Test
+    void deveApresentarIndicadores() throws Exception {
+        cadastrar(10L);
+        mockMvc.perform(post("/funcionarios")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "id": 11,
+                                  "nome": "Bruno Souza",
+                                  "email": "bruno@example.com",
+                                  "cargo": "Analista",
+                                  "status": "APROVADO"
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/funcionarios/indicadores"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCandidatos").value(2))
+                .andExpect(jsonPath("$.emAnalise").value(1))
+                .andExpect(jsonPath("$.aprovados").value(1))
+                .andExpect(jsonPath("$.reprovados").value(0))
+                .andExpect(jsonPath("$.contratados").value(0));
+    }
+
     private void cadastrar(Long id) throws Exception {
         mockMvc.perform(post("/funcionarios")
                         .contentType(MediaType.APPLICATION_JSON)
