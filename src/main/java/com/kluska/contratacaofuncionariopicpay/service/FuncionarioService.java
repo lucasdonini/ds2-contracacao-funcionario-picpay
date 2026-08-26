@@ -6,6 +6,7 @@ import com.kluska.contratacaofuncionariopicpay.dto.AtualizarFuncionarioRequest;
 import com.kluska.contratacaofuncionariopicpay.dto.AtualizarParcialmenteFuncionarioRequest;
 import com.kluska.contratacaofuncionariopicpay.dto.CriarFuncionarioRequest;
 import com.kluska.contratacaofuncionariopicpay.dto.FuncionarioResponse;
+import com.kluska.contratacaofuncionariopicpay.dto.IndicadoresFuncionariosResponse;
 import com.kluska.contratacaofuncionariopicpay.exception.FuncionarioNaoEncontradoException;
 import com.kluska.contratacaofuncionariopicpay.exception.RequisicaoInvalidaException;
 import com.kluska.contratacaofuncionariopicpay.repository.FuncionarioRepository;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +46,40 @@ public class FuncionarioService {
 
     public FuncionarioResponse buscarPorId(Long id) {
         return paraResponse(buscarFuncionario(id));
+    }
+
+    public List<FuncionarioResponse> buscar(
+            String nome,
+            String cargo,
+            StatusFuncionario status
+    ) {
+        String filtroNome = normalizarFiltro(nome);
+        String filtroCargo = normalizarFiltro(cargo);
+
+        if (filtroNome == null && filtroCargo == null && status == null) {
+            throw new RequisicaoInvalidaException(
+                    "Informe ao menos um critério de busca: nome, cargo ou status."
+            );
+        }
+
+        return funcionarioRepository.buscarTodos().stream()
+                .filter(funcionario -> contemIgnorandoMaiusculas(funcionario.getNome(), filtroNome))
+                .filter(funcionario -> contemIgnorandoMaiusculas(funcionario.getCargo(), filtroCargo))
+                .filter(funcionario -> status == null || funcionario.getStatus() == status)
+                .map(this::paraResponse)
+                .toList();
+    }
+
+    public IndicadoresFuncionariosResponse obterIndicadores() {
+        List<Funcionario> funcionarios = funcionarioRepository.buscarTodos();
+
+        return IndicadoresFuncionariosResponse.builder()
+                .totalCandidatos(funcionarios.size())
+                .emAnalise(contarPorStatus(funcionarios, StatusFuncionario.EM_ANALISE))
+                .aprovados(contarPorStatus(funcionarios, StatusFuncionario.APROVADO))
+                .reprovados(contarPorStatus(funcionarios, StatusFuncionario.REPROVADO))
+                .contratados(contarPorStatus(funcionarios, StatusFuncionario.CONTRATADO))
+                .build();
     }
 
     public FuncionarioResponse atualizarCompletamente(Long id, AtualizarFuncionarioRequest request) {
@@ -117,6 +153,24 @@ public class FuncionarioService {
 
     private String normalizarOpcional(String valor) {
         return valor == null ? null : valor.trim();
+    }
+
+    private String normalizarFiltro(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+
+        return valor.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private boolean contemIgnorandoMaiusculas(String valor, String filtro) {
+        return filtro == null || valor.toLowerCase(Locale.ROOT).contains(filtro);
+    }
+
+    private long contarPorStatus(List<Funcionario> funcionarios, StatusFuncionario status) {
+        return funcionarios.stream()
+                .filter(funcionario -> funcionario.getStatus() == status)
+                .count();
     }
 
     private FuncionarioResponse paraResponse(Funcionario funcionario) {

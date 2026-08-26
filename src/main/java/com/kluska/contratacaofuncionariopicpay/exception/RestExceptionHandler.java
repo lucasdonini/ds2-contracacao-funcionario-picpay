@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.List;
@@ -91,6 +92,17 @@ public class RestExceptionHandler {
                 request,
                 List.of()
         );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErroApiResponse> tratarTipoDeParametroInvalido(
+            MethodArgumentTypeMismatchException exception,
+            HttpServletRequest request
+    ) {
+        String mensagem = "O valor '%s' é inválido para o parâmetro '%s'."
+                .formatted(exception.getValue(), exception.getName());
+
+        return criarResposta(HttpStatus.BAD_REQUEST, mensagem, request, List.of());
     }
 
     private CampoInvalidoResponse paraCampoInvalido(FieldError erro) {
