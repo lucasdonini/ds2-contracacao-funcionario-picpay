@@ -9,7 +9,12 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+// Asserções agrupadas validam os campos do mesmo resultado.
+@SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
 class FuncionarioRepositoryTest {
+
+    private static final String NOME_FUNCIONARIO = "Ana";
+
 
     private FuncionarioRepository repository;
 
@@ -20,7 +25,7 @@ class FuncionarioRepositoryTest {
 
     @Test
     void deveGerarIdsSequenciaisQuandoIdNaoForInformado() {
-        Funcionario primeiro = repository.inserir(novoFuncionario(null, "Ana"));
+        Funcionario primeiro = repository.inserir(novoFuncionario(null, NOME_FUNCIONARIO));
         Funcionario segundo = repository.inserir(novoFuncionario(null, "Bruno"));
 
         assertThat(primeiro.getId()).isEqualTo(1L);
@@ -29,7 +34,7 @@ class FuncionarioRepositoryTest {
 
     @Test
     void deveRespeitarIdInformadoEAjustarProximaSequencia() {
-        repository.inserir(novoFuncionario(10L, "Ana"));
+        repository.inserir(novoFuncionario(10L, NOME_FUNCIONARIO));
 
         Funcionario gerado = repository.inserir(novoFuncionario(null, "Bruno"));
 
@@ -38,7 +43,7 @@ class FuncionarioRepositoryTest {
 
     @Test
     void deveRecusarIdDuplicado() {
-        repository.inserir(novoFuncionario(5L, "Ana"));
+        repository.inserir(novoFuncionario(5L, NOME_FUNCIONARIO));
 
         assertThatThrownBy(() -> repository.inserir(novoFuncionario(5L, "Bruno")))
                 .isInstanceOf(FuncionarioIdDuplicadoException.class)
@@ -47,19 +52,19 @@ class FuncionarioRepositoryTest {
 
     @Test
     void deveProtegerObjetosArmazenadosContraAlteracoesExternas() {
-        Funcionario salvo = repository.inserir(novoFuncionario(null, "Ana"));
+        Funcionario salvo = repository.inserir(novoFuncionario(null, NOME_FUNCIONARIO));
         salvo.setNome("Nome alterado fora do repositório");
 
         Funcionario recuperado = repository.buscarPorId(salvo.getId()).orElseThrow();
 
-        assertThat(recuperado.getNome()).isEqualTo("Ana");
+        assertThat(recuperado.getNome()).isEqualTo(NOME_FUNCIONARIO);
     }
 
     private Funcionario novoFuncionario(Long id, String nome) {
         return Funcionario.builder()
                 .id(id)
                 .nome(nome)
-                .email(nome.toLowerCase() + "@example.com")
+                .email(nome.toLowerCase(java.util.Locale.ROOT) + "@example.com")
                 .cargo("Desenvolvedor")
                 .status(StatusFuncionario.EM_ANALISE)
                 .build();

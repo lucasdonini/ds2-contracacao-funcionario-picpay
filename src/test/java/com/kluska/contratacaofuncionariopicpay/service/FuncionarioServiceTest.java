@@ -17,6 +17,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+// Asserções agrupadas validam os campos do mesmo resultado.
+@SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
 class FuncionarioServiceTest {
 
     private FuncionarioService service;
@@ -164,7 +166,7 @@ class FuncionarioServiceTest {
     ) {
         return CriarFuncionarioRequest.builder()
                 .nome(nome)
-                .email(nome.toLowerCase().replace(" ", ".") + "@example.com")
+                .email(nome.toLowerCase(java.util.Locale.ROOT).replace(" ", ".") + "@example.com")
                 .cargo(cargo)
                 .status(status)
                 .build();

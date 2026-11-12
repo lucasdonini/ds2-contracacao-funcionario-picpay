@@ -18,7 +18,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+// MockMvc andExpect executa as asserções de resposta HTTP.
+@SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
 class FuncionarioControllerTest {
+
+    private static final String CAMINHO_FUNCIONARIOS = "/funcionarios";
+    private static final String CAMPO_MENSAGEM = "$.mensagem";
+
 
     private MockMvc mockMvc;
 
@@ -34,7 +40,7 @@ class FuncionarioControllerTest {
 
     @Test
     void deveCadastrarFuncionario() throws Exception {
-        mockMvc.perform(post("/funcionarios")
+        mockMvc.perform(post(CAMINHO_FUNCIONARIOS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonDeCadastro(1L)))
                 .andExpect(status().isCreated())
@@ -46,7 +52,7 @@ class FuncionarioControllerTest {
 
     @Test
     void deveValidarCamposObrigatoriosNoCadastro() throws Exception {
-        mockMvc.perform(post("/funcionarios")
+        mockMvc.perform(post(CAMINHO_FUNCIONARIOS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -56,7 +62,7 @@ class FuncionarioControllerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.mensagem").value("Um ou mais campos enviados são inválidos."))
+                .andExpect(jsonPath(CAMPO_MENSAGEM).value("Um ou mais campos enviados são inválidos."))
                 .andExpect(jsonPath("$.campos.length()").value(3));
     }
 
@@ -64,18 +70,18 @@ class FuncionarioControllerTest {
     void deveRecusarIdDuplicado() throws Exception {
         cadastrar(7L);
 
-        mockMvc.perform(post("/funcionarios")
+        mockMvc.perform(post(CAMINHO_FUNCIONARIOS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonDeCadastro(7L)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.mensagem").value("Já existe um funcionário cadastrado com o ID 7."));
+                .andExpect(jsonPath(CAMPO_MENSAGEM).value("Já existe um funcionário cadastrado com o ID 7."));
     }
 
     @Test
     void deveConsultarTodosEConsultarPorId() throws Exception {
         cadastrar(3L);
 
-        mockMvc.perform(get("/funcionarios"))
+        mockMvc.perform(get(CAMINHO_FUNCIONARIOS))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(3));
@@ -89,7 +95,7 @@ class FuncionarioControllerTest {
     void deveRetornarNaoEncontradoAoConsultarIdInexistente() throws Exception {
         mockMvc.perform(get("/funcionarios/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.mensagem").value("Funcionário com ID 999 não foi encontrado."));
+                .andExpect(jsonPath(CAMPO_MENSAGEM).value("Funcionário com ID 999 não foi encontrado."));
     }
 
     @Test
@@ -142,7 +148,7 @@ class FuncionarioControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.mensagem").value(
+                .andExpect(jsonPath(CAMPO_MENSAGEM).value(
                         "Informe ao menos um dos campos permitidos no PATCH: cargo, status ou salário."
                 ));
     }
@@ -175,7 +181,7 @@ class FuncionarioControllerTest {
     void deveRecusarBuscaSemCriterios() throws Exception {
         mockMvc.perform(get("/funcionarios/busca"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.mensagem").value(
+                .andExpect(jsonPath(CAMPO_MENSAGEM).value(
                         "Informe ao menos um critério de busca: nome, cargo ou status."
                 ));
     }
@@ -185,7 +191,7 @@ class FuncionarioControllerTest {
         mockMvc.perform(get("/funcionarios/busca")
                         .param("status", "DESCONHECIDO"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.mensagem").value(
+                .andExpect(jsonPath(CAMPO_MENSAGEM).value(
                         "O valor 'DESCONHECIDO' é inválido para o parâmetro 'status'."
                 ));
     }
@@ -193,7 +199,7 @@ class FuncionarioControllerTest {
     @Test
     void deveApresentarIndicadores() throws Exception {
         cadastrar(10L);
-        mockMvc.perform(post("/funcionarios")
+        mockMvc.perform(post(CAMINHO_FUNCIONARIOS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -216,7 +222,7 @@ class FuncionarioControllerTest {
     }
 
     private void cadastrar(Long id) throws Exception {
-        mockMvc.perform(post("/funcionarios")
+        mockMvc.perform(post(CAMINHO_FUNCIONARIOS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonDeCadastro(id)))
                 .andExpect(status().isCreated());
