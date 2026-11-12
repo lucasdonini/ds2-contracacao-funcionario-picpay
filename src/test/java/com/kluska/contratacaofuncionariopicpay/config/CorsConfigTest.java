@@ -19,6 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+// MockMvc andExpect executa as asserções de resposta HTTP.
+@SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
 class CorsConfigTest {
 
     @Test
@@ -57,7 +59,7 @@ class CorsConfigTest {
     private AnnotationConfigWebApplicationContext criarContexto() {
         AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
         context.setServletContext(new MockServletContext());
-        context.register(TestConfiguration.class);
+        context.register(MvcConfiguration.class);
         context.refresh();
         return context;
     }
@@ -65,7 +67,7 @@ class CorsConfigTest {
     @Configuration
     @EnableWebMvc
     @Import(CorsConfig.class)
-    static class TestConfiguration {
+    static class MvcConfiguration {
 
         @Bean
         FuncionarioRepository funcionarioRepository() {

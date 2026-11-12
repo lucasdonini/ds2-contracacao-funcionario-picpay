@@ -33,6 +33,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FuncionarioController {
 
+    private static final String CAMINHO_ID = "/{id}";
+    private static final String MENSAGEM_ID_POSITIVO = "O ID deve ser um número positivo.";
+
     private final FuncionarioService funcionarioService;
 
     @PostMapping
@@ -41,7 +44,7 @@ public class FuncionarioController {
     ) {
         FuncionarioResponse funcionario = funcionarioService.cadastrar(request);
         URI localizacao = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
+                .path(CAMINHO_ID)
                 .buildAndExpand(funcionario.getId())
                 .toUri();
 
@@ -67,32 +70,32 @@ public class FuncionarioController {
         return ResponseEntity.ok(funcionarioService.obterIndicadores());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(CAMINHO_ID)
     public ResponseEntity<FuncionarioResponse> buscarPorId(
-            @PathVariable @Positive(message = "O ID deve ser um número positivo.") Long id
+            @PathVariable @Positive(message = MENSAGEM_ID_POSITIVO) Long id
     ) {
         return ResponseEntity.ok(funcionarioService.buscarPorId(id));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(CAMINHO_ID)
     public ResponseEntity<FuncionarioResponse> atualizarCompletamente(
-            @PathVariable @Positive(message = "O ID deve ser um número positivo.") Long id,
+            @PathVariable @Positive(message = MENSAGEM_ID_POSITIVO) Long id,
             @Valid @RequestBody AtualizarFuncionarioRequest request
     ) {
         return ResponseEntity.ok(funcionarioService.atualizarCompletamente(id, request));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping(CAMINHO_ID)
     public ResponseEntity<FuncionarioResponse> atualizarParcialmente(
-            @PathVariable @Positive(message = "O ID deve ser um número positivo.") Long id,
+            @PathVariable @Positive(message = MENSAGEM_ID_POSITIVO) Long id,
             @Valid @RequestBody AtualizarParcialmenteFuncionarioRequest request
     ) {
         return ResponseEntity.ok(funcionarioService.atualizarParcialmente(id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(CAMINHO_ID)
     public ResponseEntity<Void> excluir(
-            @PathVariable @Positive(message = "O ID deve ser um número positivo.") Long id
+            @PathVariable @Positive(message = MENSAGEM_ID_POSITIVO) Long id
     ) {
         funcionarioService.excluir(id);
         return ResponseEntity.noContent().build();

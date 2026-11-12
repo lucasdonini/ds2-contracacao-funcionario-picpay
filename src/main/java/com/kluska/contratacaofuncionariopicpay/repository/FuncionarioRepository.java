@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public class FuncionarioRepository {
 
-    private final ArrayList<Funcionario> funcionarios = new ArrayList<>();
+    private final List<Funcionario> funcionarios = new ArrayList<>();
     private long proximoId = 1L;
 
     public synchronized Funcionario inserir(Funcionario funcionario) {
