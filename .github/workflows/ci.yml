@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend - ${{ matrix.check.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          - name: Build
+            task: assemble
+          - name: Lint
+            task: checkstyleMain checkstyleTest
+          - name: Code smells
+            task: pmdMain pmdTest
+          - name: Testes
+            task: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: ${{ matrix.check.name }}
+        run: bash ./gradlew ${{ matrix.check.task }} --no-daemon
+      - name: Publicar relatórios
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-${{ strategy.job-index }}-reports
+          path: build/reports/
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend - ${{ matrix.check.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          - name: Build
+            command: npm run build
+          - name: Lint e code smells
+            command: npx --yes --package=eslint@9.39.1 eslint . --max-warnings=0
+          - name: Testes
+            command: npm test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependências
+        run: npm ci
+      - name: ${{ matrix.check.name }}
+        run: ${{ matrix.check.command }}
