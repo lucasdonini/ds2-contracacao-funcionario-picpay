@@ -5,6 +5,8 @@ import com.kluska.contratacaofuncionariopicpay.exception.RestExceptionHandler;
 import com.kluska.contratacaofuncionariopicpay.repository.FuncionarioRepository;
 import com.kluska.contratacaofuncionariopicpay.service.FuncionarioService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -23,36 +25,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SuppressWarnings("PMD.UnitTestShouldIncludeAssert")
 class CorsConfigTest {
 
-    @Test
-    void devePermitirRequisicoesDoFrontendLocal() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"http://localhost:5173", "https://host-aleatorio.com"})
+    void devePermitirRequisicoesDeQualquerOrigem(String origem) throws Exception {
         try (AnnotationConfigWebApplicationContext context = criarContexto()) {
             MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
 
             mockMvc.perform(options("/funcionarios")
-                            .header(HttpHeaders.ORIGIN, "http://localhost:5173")
+                            .header(HttpHeaders.ORIGIN, origem)
                             .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
                             .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type"))
                     .andExpect(status().isOk())
                     .andExpect(header().string(
                             HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
-                            "http://localhost:5173"
+                            "*"
                     ))
                     .andExpect(header().string(
                             HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS,
                             "GET,POST,PUT,PATCH,DELETE,OPTIONS"
                     ));
-        }
-    }
-
-    @Test
-    void deveRecusarOrigemNaoAutorizada() throws Exception {
-        try (AnnotationConfigWebApplicationContext context = criarContexto()) {
-            MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-
-            mockMvc.perform(options("/funcionarios")
-                            .header(HttpHeaders.ORIGIN, "https://origem-nao-autorizada.example")
-                            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
-                    .andExpect(status().isForbidden());
         }
     }
 
